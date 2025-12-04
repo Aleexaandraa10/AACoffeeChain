@@ -2,21 +2,21 @@
 pragma solidity ^0.8.20;
 
 /**
- * @title Library
- * @dev Helper library for computing ratings, generating coffee codes, and
- *      checking reward/badge milestones. This library is used inside CoffeeReviews.
+
+    Helper library for computing ratings, generating coffee codes, and
+    checking reward/badge milestones. This library is used inside CoffeeReviews.
  */
 library CoffeeLibrary {
 
     /**
-     * @dev Computes the new average rating after a new review is submitted.
-     * Formula: newAvg = (oldAvg * oldCount + newRating) / (oldCount + 1)
+        Computes the new average rating after a new review is submitted.
+        Formula: newAvg = (oldAvg * oldCount + newRating) / (oldCount + 1)
      */
     function calculateNewAverageRating(
         uint256 oldAvg,
         uint256 oldCount,
         uint256 newRating
-    ) internal pure returns (uint256) {
+    ) internal pure returns (uint256) { // pure = fct de calcul; internal = accesibila doar in contract
         if (oldCount == 0) {
             return newRating;
         }
@@ -24,8 +24,8 @@ library CoffeeLibrary {
     }
 
     /**
-     * @dev Creates a deterministic coffee code based on its name.
-     * Useful if you want to auto-generate codes instead of manually writing bytes32.
+        Creates a deterministic coffee code based on its name.
+        Useful if you want to auto-generate codes instead of manually writing bytes32.
      */
     function generateCoffeeCode(string memory name)
         internal
@@ -36,8 +36,8 @@ library CoffeeLibrary {
     }
 
     /**
-     * @dev Returns true if the user is eligible for a loyalty badge.
-     * Example rule: badge every 5 reviews.
+        Returns true if the user is eligible for a loyalty badge.
+        Example rule: badge every 5 reviews.
      */
     function checkRewardEligibility(uint256 reviewCount)
         internal

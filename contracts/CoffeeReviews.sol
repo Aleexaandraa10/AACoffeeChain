@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import "./Library.sol";
 
+// in solidity interfata este doar pt a putea apela fct pe un contract extern
 interface ICoffeeToken {
     function rewardUser(address user) external;
 }
@@ -12,6 +13,8 @@ interface ICoffeeBadge {
 }
 
 contract CoffeeReviews {
+    // toate var de tip uint256 pot folosi fct din CoffeeLibrary 
+    //ca si cum ar fi metode ale tipului uint256
     using CoffeeLibrary for uint256;
 
     struct Review {
@@ -22,20 +25,22 @@ contract CoffeeReviews {
         uint256 timestamp;
     }
 
-    // Dependențe
-    ICoffeeToken public coffeeToken;
+    // Dependențe = referinte catre contractele externe
+    ICoffeeToken public coffeeToken; 
     ICoffeeBadge public coffeeBadge;
 
+
     // Prag pentru a primi un NFT badge
+    // adica un user primeste NFT badge dupa 5 review-uri
     uint256 public constant BADGE_THRESHOLD = 5;
 
-    // Stocăm toate review-urile
+
     Review[] public reviews;
 
     // Ținem evidența numărului de recenzii per utilizator
     mapping(address => uint256) public reviewCount;
 
-    // Evenimente
+
     event ReviewPosted(
         address indexed reviewer,
         bytes32 indexed coffeeCode,
@@ -43,12 +48,10 @@ contract CoffeeReviews {
         string text,
         uint256 timestamp
     );
-
     event BadgeAwarded(address indexed user, uint256 timestamp);
 
-    /**
-     * @dev Constructor: primește adresele CoffeeToken și CoffeeBadge.
-     */
+
+
     constructor(address _coffeeToken, address _coffeeBadge) {
         require(_coffeeToken != address(0), "Invalid token address");
         require(_coffeeBadge != address(0), "Invalid badge address");
@@ -58,7 +61,7 @@ contract CoffeeReviews {
     }
 
     /**
-     * @dev Postează o recenzie, acordă token și eventual badge.
+        Posteaza o recenzie, acorda token si eventual badge.
      */
     function postReview(bytes32 coffeeCode, uint8 rating, string calldata text) external {
         require(rating >= 1 && rating <= 5, "Rating must be 1-5");
@@ -70,15 +73,14 @@ contract CoffeeReviews {
             text: text,
             timestamp: block.timestamp
         }));
-
-        // Incrementăm nr. de review-uri
         reviewCount[msg.sender]++;
 
-        // Reward ERC20 token
+        // pt fiecare recenzie userul primeste 1 COF(moneda virtuala interna) token
         coffeeToken.rewardUser(msg.sender);
 
+
         // Dacă utilizatorul atinge pragul → primește badge
-        if (reviewCount[msg.sender] == BADGE_THRESHOLD) {
+        if (reviewCount[msg.sender].checkRewardEligibility()) {
             coffeeBadge.mintBadge(msg.sender);
             emit BadgeAwarded(msg.sender, block.timestamp);
         }
@@ -86,15 +88,16 @@ contract CoffeeReviews {
         emit ReviewPosted(msg.sender, coffeeCode, rating, text, block.timestamp);
     }
 
+
     /**
-     * @dev Returnează numărul total de recenzii.
+        Returneaza numărul total de recenzii.
      */
     function getTotalReviews() external view returns (uint256) {
         return reviews.length;
     }
 
     /**
-     * @dev Returnează o recenzie după index.
+         Returneaza o recenzie dupa index.
      */
     function getReview(uint256 index)
         external
