@@ -44,17 +44,21 @@ export default defineConfig({
   plugins: [hardhatToolboxViemPlugin],
 
   solidity: {
-    version: "0.8.28",
+    //modificat aici din .28 in .20
+    version: "0.8.20",
     settings: {
       optimizer: { enabled: true, runs: 200 },
     },
   },
+  /*asta era inainte
+  paths: { sources: "./contracts", tests: "./test", artifacts: "./artifacts", cache: "./cache", },
+  */
   paths: {
-    sources: "./contracts",
-    tests: "./test",
-    artifacts: "./artifacts",
-    cache: "./cache",
-  },
+  sources: "./contracts",
+  tests: "./test",
+  artifacts: "./hardhat/artifacts",
+  cache: "./hardhat/cache",
+},
 
   networks: {
     hardhatMainnet: {

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 /**
-
     Helper library for computing ratings, generating coffee codes, and
     checking reward/badge milestones. This library is used inside CoffeeReviews.
  */
@@ -16,7 +15,7 @@ library CoffeeLibrary {
         uint256 oldAvg,
         uint256 oldCount,
         uint256 newRating
-    ) internal pure returns (uint256) { // pure = fct de calcul; internal = accesibila doar in contract
+    ) internal pure returns (uint256) {
         if (oldCount == 0) {
             return newRating;
         }
@@ -44,6 +43,6 @@ library CoffeeLibrary {
         pure
         returns (bool)
     {
-        return reviewCount % 5 == 0; // badge every 5 reviews
+        return reviewCount % 5 == 0;
     }
 }
