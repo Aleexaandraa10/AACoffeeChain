@@ -79,14 +79,17 @@ contract CoffeeReviews {
         coffeeToken.rewardUser(msg.sender);
 
 
+        // Emit event pentru review nou
+        emit ReviewPosted(msg.sender, coffeeCode, rating, text, block.timestamp);
+
+
         // Dacă utilizatorul atinge pragul → primește badge
         if (reviewCount[msg.sender].checkRewardEligibility()) {
             coffeeBadge.mintBadge(msg.sender);
+            reviewCount[msg.sender] = 0;
             emit BadgeAwarded(msg.sender, block.timestamp);
         }
-
-        emit ReviewPosted(msg.sender, coffeeCode, rating, text, block.timestamp);
-    }
+}
 
 
     /**

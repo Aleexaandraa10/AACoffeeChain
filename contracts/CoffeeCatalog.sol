@@ -17,15 +17,20 @@ contract CoffeeCatalog is Ownable {
     }
 
     // maparea de la coffeeCode → Coffee struct
-
     mapping(bytes32 => Coffee) public coffees;
     mapping(bytes32 => uint256) public averageRating;
     mapping(bytes32 => uint256) public ratingCount;
+
+    bytes32[] public coffeeCodes;
+
+    event CoffeeAdded(bytes32 indexed code, string name, uint256 priceWei, string imageCID);
+    event CoffeePurchased(address indexed buyer, bytes32 indexed code, uint256 priceWei);
 
     // in OpenZeppelin, Ownable are un constructor care cere explicit adresa ownerului
     constructor(address initialOwner)
         Ownable(initialOwner)
     {}
+
 
     /**
      Adaugare produs nou ( doar ownerul)
@@ -38,22 +43,26 @@ contract CoffeeCatalog is Ownable {
         require(!coffees[coffeeCode].exists, "Coffee exists");
 
         coffees[coffeeCode] = Coffee(name, priceWei, imageCID, true);
+        coffeeCodes.push(coffeeCode);
+
+        emit CoffeeAdded(coffeeCode, name, priceWei, imageCID);
     }
 
 
-    // external = fct poate fi apelata doar din afara contractului
-   // adica poate fi apelata de un user(prin MetaMask, un alt contract, un script)
-   // dar nu poate fi apelata intern din acelasi contract
 
-   // payable = fct poate primi ETH
+    // external = fct poate fi apelata doar din afara contractului
+    // adica poate fi apelata de un user(prin MetaMask, un alt contract, un script)
+    // dar nu poate fi apelata intern din acelasi contract
+
+    // payable = fct poate primi ETH
     function buyCoffee(bytes32 code) external payable {
-         // memory = iau coffees[coffeeCode] din storage si creez o copie temporara in memory
+        // memory = iau coffees[coffeeCode] din storage si creez o copie temporara in memory
         //        = zona temporara unde val este copiata doar pt durata executiei fct
         Coffee memory c = coffees[code];
         require(c.exists, "Coffee not found");
         require(msg.value == c.priceWei, "Incorrect ETH");
 
-        // Trimit ETH ownerului
+         // Trimit ETH ownerului
         /*
             Flow complet:
                 1. User apasa "Buy"
@@ -62,8 +71,11 @@ contract CoffeeCatalog is Ownable {
                 4. Contractul forwardeaza ETH catre owner
                 5. Emite evenimentul CoffeePurchased
         */
+
         (bool ok,) = payable(owner()).call{value: msg.value}("");
         require(ok, "ETH failed");
+
+        emit CoffeePurchased(msg.sender, code, msg.value);
     }
 
 
@@ -72,7 +84,7 @@ contract CoffeeCatalog is Ownable {
         external
         view
         returns (string memory, uint256, string memory)
-    {// citeste din mapping
+    { // citeste din mapping
         Coffee memory c = coffees[code];
         require(c.exists, "Coffee not found");
         return (c.name, c.priceWei, c.imageCID);
@@ -88,4 +100,20 @@ contract CoffeeCatalog is Ownable {
         averageRating[code] = newAvg;
         ratingCount[code] = oldCount + 1;
     }
+
+    
+    function getAllCoffees()
+        external
+        view
+        returns (bytes32[] memory, Coffee[] memory)
+    {
+        Coffee[] memory list = new Coffee[](coffeeCodes.length);
+
+        for (uint256 i = 0; i < coffeeCodes.length; i++) {
+            list[i] = coffees[coffeeCodes[i]];
+        }
+
+        return (coffeeCodes, list);
+    }
+
 }

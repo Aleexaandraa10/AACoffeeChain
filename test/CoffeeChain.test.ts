@@ -1,6 +1,6 @@
 import { describe, it, before } from "node:test";
 import { expect } from "chai";
-import hre, { network } from "hardhat";   // 🔥 aici e fixul!
+import hre, { network } from "hardhat";   // aici e fixul
 import { keccak256, toBytes, parseEther } from "viem";
 
 
@@ -25,7 +25,6 @@ describe("CoffeeChain – Full Flow with Hardhat 3 + viem", function () {
 
   before(async function () {
 
-    // 🔥 Singura metodă corectă în Hardhat 3
     const net = await network.connect();
     viem = net.viem;
     publicClient = await viem.getPublicClient();
@@ -63,15 +62,20 @@ describe("CoffeeChain – Full Flow with Hardhat 3 + viem", function () {
     const coffee = await catalog.read.getCoffee([coffeeCode]);
     expect(coffee[0]).to.equal(COFFEE_NAME);
   });
-
+ 
   // ----------------------------------------
   it("Buy coffee", async () => {
     const priceWei = parseEther(COFFEE_PRICE_ETH);
+
+    const before = await publicClient.getBalance({ address: owner.account.address });
 
     await catalog.write.buyCoffee(
       [coffeeCode],
       { value: priceWei, account: user.account }
     );
+
+    const after = await publicClient.getBalance({ address: owner.account.address });
+    expect(after - before).to.equal(priceWei);
   });
 
   // ----------------------------------------

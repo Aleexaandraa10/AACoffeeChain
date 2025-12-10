@@ -1,0 +1,270 @@
+/* === GLOBAL === */
+
+.app-container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #fdf5e6 0%, #f3e2c0 60%, #f0dcc0 100%);
+  color: #3b2f2f;
+  font-family: Georgia, "Times New Roman", serif;
+  padding-bottom: 50px;
+}
+
+.content {
+  max-width: 900px;
+  margin: auto;
+  padding: 30px 20px;
+}
+
+/* === HEADER === */
+
+.header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.header h1 {
+  font-size: 2.4rem;
+  margin-bottom: 4px;
+}
+
+.header-sub {
+  font-size: 0.95rem;
+  color: #7b5b46;
+}
+
+/* === PROFILE CARD === */
+
+.profile-card {
+  background: #fff7e9;
+  border-radius: 18px;
+  padding: 20px 22px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  margin-bottom: 26px;
+}
+
+.profile-row {
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+}
+
+.label {
+  font-weight: 700;
+}
+
+.value {
+  margin-left: 5px;
+}
+
+.profile-stats {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.stat-label {
+  font-weight: 600;
+}
+
+.stat-value {
+  font-size: 1rem;
+}
+
+.badge-status {
+  font-size: 0.95rem;
+  margin-top: 8px;
+}
+
+/* === BADGES SECTION === */
+
+.badges-section {
+  margin-bottom: 35px;
+  text-align: center;
+}
+
+.badge-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 10px;
+  justify-content: center;
+}
+
+.badge-card {
+  background: #fff3dd;
+  border-radius: 12px;
+  padding: 16px;
+  width: 120px;
+  text-align: center;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+  transition: transform 0.15s ease;
+}
+
+.badge-card:hover {
+  transform: translateY(-3px);
+}
+
+.badge-icon {
+  font-size: 2rem;
+}
+
+.badge-id {
+  font-size: 0.95rem;
+  margin-top: 5px;
+  color: #5e4630;
+}
+
+.no-badges {
+  color: #7b5b46;
+  font-size: 0.95rem;
+}
+
+/* === COFFEE SECTION === */
+
+.coffee-list-section {
+  margin-top: 20px;
+}
+
+.coffee-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+}
+
+.coffee-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.coffee-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.coffee-price {
+  font-size: 0.95rem;
+  color: #6b4b3e;
+}
+
+.btn-buy {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: none;
+  background: #c68b59;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-buy:disabled {
+  background: #b6a492;
+}
+
+.review-buttons {
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
+
+.btn-reviews {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #d8b793;
+  background: #fff8ed;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.btn-reviews.selected {
+  background: #f7e2c4;
+}
+
+/* === REVIEWS === */
+
+.review-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.review-text {
+  font-style: italic;
+}
+
+.review-author {
+  font-size: 0.8rem;
+  color: #7b5b46;
+}
+
+.no-reviews {
+  color: #8d6b52;
+  font-size: 0.9rem;
+}
+
+.stars {
+  color: #c68b59;
+  font-size: 1.1rem;
+}
+
+/* === ADD REVIEW === */
+
+.add-review-section {
+  margin-top: 35px;
+}
+
+.add-review-sub {
+  text-align: center;
+  color: #7b5b46;
+  font-size: 0.95rem;
+  margin-bottom: 12px;
+}
+
+.review-form {
+  max-width: 420px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.input-text {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #d8b793;
+}
+
+.input-score {
+  padding: 6px 10px;
+  width: 80px;
+  align-self: center;
+  border-radius: 10px;
+  border: 1px solid #d8b793;
+  text-align: center;
+}
+
+.btn-submit {
+  margin-top: 4px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: none;
+  background: #c68b59;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  align-self: center;
+}
+
+.btn-submit:disabled {
+  background: #c9b6a0;
+}
+.badge-uri {
+  margin-top: 6px;
+  font-size: 0.7rem;
+  color: #7a654d;
+}
+
+.uri-text {
+  word-break: break-all;
+  margin-top: 2px;
+}
