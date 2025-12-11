@@ -106,9 +106,9 @@ async function main() {
   const priceLatte    = ethers.parseEther("0.02"); // 0.02 ETH
   const priceCapp     = ethers.parseEther("0.03"); // 0.03 ETH
 
-  await (coffeeCatalog as any).addCoffee("Espresso", priceEspresso, "Strong coffee");
-  await (coffeeCatalog as any).addCoffee("Latte",    priceLatte,    "Milk coffee");
-  await (coffeeCatalog as any).addCoffee("Cappuccino", priceCapp,   "Foam coffee");
+  await (coffeeCatalog as any).addCoffee("Espresso", priceEspresso, "bafkreie3wmtrez67wdurzztvnknij65e7qt52nrit3k6zwibwrhkngzs34");
+  await (coffeeCatalog as any).addCoffee("Latte",    priceLatte,    "bafkreifllw2trbjry3gkdfoger2643w2mcvbx7ilxqbmun5eiwfvieubp4");
+  await (coffeeCatalog as any).addCoffee("Cappuccino", priceCapp,   "bafkreidjts2jwnnhwn4gnjs6ryvwxf6xq6ivbcrnpasmcdydzxpowfbrny");
 
   console.log("☕ Coffees added!");
 }

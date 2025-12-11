@@ -7,7 +7,7 @@ import {
   createWalletClient,
   custom,
   http,
-  padHex,
+  //padHex,
   type Address,
   formatEther,
 } from "viem";
@@ -80,8 +80,10 @@ export const getWalletClient = async () => {
 // Utils
 // ===============================================
 
-export const toBytes32 = (hexString: string) =>
-  padHex(hexString as `0x${string}`, { size: 32 });
+// export const toBytes32 = (hexString: string) =>
+//   padHex(hexString as `0x${string}`, { size: 32 });
+export const toBytes32 = (code: string) =>
+  code as `0x${string}`;
 
 export const shortenAddress = (addr: string) =>
   addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : "";
@@ -123,9 +125,60 @@ export const buyCoffee = async (coffee: UICoffee) => {
   });
 };
 
+// ======================================
+// Estimate gas + cost for buying a coffee
+// ======================================
+export async function estimateBuyCoffeeGas(coffee: UICoffee) {
+  const codeBytes = coffee.code as `0x${string}`;
+
+  // gas estimation for buyCoffee
+  const gas = await publicClient.estimateContractGas({
+    address: CoffeeCatalogAddress,
+    abi: coffeeCatalogAbi.abi,
+    functionName: "buyCoffee",
+    args: [codeBytes],
+    value: coffee.priceWei,
+  });
+
+  const gasPrice = await publicClient.getGasPrice();
+
+  const gasCost = gas * gasPrice;
+  const totalCost = gasCost + coffee.priceWei;
+
+  return {
+    gas,
+    gasPrice,
+    gasCost,
+    totalCost,
+  };
+}
+
+
 // ===============================================
 // 2️⃣ Reviews
 // ===============================================
+
+export async function estimateReviewGas(code: string, score: number, text: string) {
+  const codeBytes = code as `0x${string}`;
+
+  const gas = await publicClient.estimateContractGas({
+    address: CoffeeReviewsAddress,
+    abi: coffeeReviewsAbi.abi,
+    functionName: "postReview",
+    args: [codeBytes, score, text],
+  });
+
+  const gasPrice = await publicClient.getGasPrice();
+  const gasCost = gas * gasPrice;
+  const totalCost = gasCost; // postReview nu are value
+
+  return {
+    gas,
+    gasPrice,
+    gasCost,
+    totalCost,
+  };
+}
 
 export const addReview = async (
   code: string,
