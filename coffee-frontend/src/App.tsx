@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import type { FormEvent } from "react";
 import "./App.css";
 
@@ -95,6 +95,23 @@ function App() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const watchersInitialized = useRef(false);
+
+
+
+  // ================= Badge / Review progress (UI logic) =================
+  const MAX_BADGES = 4;
+  // progresul către următorul badge (0–4)
+  const reviewProgress = reviewCount % BADGE_THRESHOLD;
+  // câte badge-uri are deja userul
+  const badgesUnlocked = badges.length;
+  // afișăm "Badge unlocked!" doar dacă:
+  // - suntem exact la multiplu de 5
+  // - userul NU a luat deja toate cele 4 badge-uri
+  const isBadgeUnlocked =
+    reviewCount > 0 &&
+    reviewCount % BADGE_THRESHOLD === 0 &&
+    badgesUnlocked < MAX_BADGES;
 
   // =============================================================================
   //                      UTILS/HELPERS
@@ -201,6 +218,9 @@ function App() {
   // ==================================================================================
   useEffect(() => {
     if (!account) return;
+    if (watchersInitialized.current) return;
+
+    watchersInitialized.current = true;
 
     const unwatchPurchase = publicClient.watchContractEvent({
       address: CoffeeCatalogAddress,
@@ -234,6 +254,7 @@ function App() {
         if (selectedCoffee) loadReviewsForCoffee(selectedCoffee);
 
         getUserReviewCount(account).then(setReviewCount);
+        getTokenBalance(account).then(setCftBalance);
 
         getBadges(account)
           .then(async (ids) => {
@@ -336,6 +357,10 @@ function App() {
           getUserReviewCount(account),
           getBadges(account),
         ]);
+
+        setCftBalance(cft);
+        setReviewCount(cnt);
+
 
         const metadata: BadgeMeta[] = await Promise.all(
           badgeIds.map(async (tokenId, idx) => {
@@ -467,7 +492,8 @@ const AddCoffee = ({ account }: { account: string }) => {
 
         await publicClient.waitForTransactionReceipt({ hash });
 
-        alert("Coffee added! TX Hash: " + hash);
+        showToast("success", "Coffee added! TX Hash: " + hash);
+        //alert("Coffee added! TX Hash: " + hash);
 
         // reset form (opțional, dar nice)
         setName("");
@@ -475,7 +501,9 @@ const AddCoffee = ({ account }: { account: string }) => {
         setFile(null);
       } catch (err: any) {
         console.error(err);
-        alert(err.message || "Something went wrong");
+        //alert(err.message || "Something went wrong");
+        showToast("error", err.message || "Something went wrong");
+
       } finally {
         setAdding(false); // deblocăm
       }
@@ -483,7 +511,13 @@ const AddCoffee = ({ account }: { account: string }) => {
 
     return (
       <div className="add-coffee-card">
-        <h2 className="add-coffee-title">Add New Coffee ☕</h2>
+       <h2 className="add-coffee-title">
+        Add New Coffee <span className="coffee-emoji">☕</span>
+      </h2>
+      <p className="add-coffee-subtitle">
+        Create a new coffee available in the shop
+      </p>
+
 
         <input
           className="add-coffee-input"
@@ -532,7 +566,7 @@ const AddCoffee = ({ account }: { account: string }) => {
       <div className="content">
         {/* HEADER */}
         <header className="header">
-          <h1>CoffeeChain ☕</h1>
+          <h1>AACoffeeChain ☕</h1>
           <p className="header-sub">A tiny Web3 coffee shop on Hardhat</p>
         </header>
 
@@ -557,14 +591,22 @@ const AddCoffee = ({ account }: { account: string }) => {
             <div>
               <div className="stat-label">Your reviews</div>
               <div>
-                {reviewCount} / {BADGE_THRESHOLD}
+                {reviewProgress} / {BADGE_THRESHOLD}
               </div>
             </div>
+
           </div>
 
           <div className="badge-status">
-            {reviewCount >= BADGE_THRESHOLD ? "🎖 Badge unlocked!" : "Keep reviewing ☕"}
+            {isBadgeUnlocked ? (
+              <>
+                🎖 Badge unlocked! <span className="muted">Keep reviewing to get more ☕</span>
+              </>
+            ) : (
+              "Keep reviewing ☕"
+            )}
           </div>
+
         </section>
 
         {/* ADD COFFEE BUTTON */}

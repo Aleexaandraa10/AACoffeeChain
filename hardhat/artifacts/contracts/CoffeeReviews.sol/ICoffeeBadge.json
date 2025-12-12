@@ -9,6 +9,11 @@
           "internalType": "address",
           "name": "to",
           "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "badgeId",
+          "type": "uint256"
         }
       ],
       "name": "mintBadge",
@@ -23,5 +28,5 @@
   "deployedLinkReferences": {},
   "immutableReferences": {},
   "inputSourceName": "project/contracts/CoffeeReviews.sol",
-  "buildInfoId": "solc-0_8_20-0a3470ff77f4166beec47510b1491aabecf51f92"
+  "buildInfoId": "solc-0_8_20-e36883ecf3ed8d796c7aad466f991ccfa349f79d"
 }

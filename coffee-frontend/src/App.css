@@ -440,12 +440,21 @@
   margin-bottom: 20px;
   font-size: 1.6rem;
   font-weight: bold;
+  text-align: center;
   color: #4c2a1f;
 }
 
+.add-coffee-subtitle {
+  text-align: center;
+  font-size: 0.95rem;
+  color: #8a6f5a;
+  margin-bottom: 20px;
+}
+
+
 /* INPUTS */
 .add-coffee-input {
-  width: 100%;
+  width: 92%;
   padding: 12px;
   margin-bottom: 15px;
   border-radius: 10px;

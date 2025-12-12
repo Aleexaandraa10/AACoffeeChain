@@ -7,16 +7,20 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract CoffeeBadge is ERC721, Ownable {
     // reward = 1 COF token = 1 * 10^18 unitati interne
-    uint256 public nextTokenId = 1;
+    // uint256 public nextTokenId = 1;
+
 
     uint256 public constant MAX_BADGES = 4;
-
 
     // adresa contractului CoffeeReviews care are voie să mintuiască
     address public reviewerContract;
 
     // fiecare user → lista de tokenId-uri ale badge-urilor
     mapping(address => uint256[]) private _ownedBadges;
+
+    mapping(address => mapping(uint256 => bool)) public hasBadge;
+
+
 
     /*
         ERC721 = standardul oficial pt NFT (Non-Fungible Tokens)
@@ -43,19 +47,31 @@ contract CoffeeBadge is ERC721, Ownable {
         Mintuieste un badge pentru un utilizator fidel.
         Poate fi apelat DOAR de contractul CoffeeReviews.
      */
-    function mintBadge(address to) external {
-        require(msg.sender == reviewerContract, "Not authorized to mint");
+    function mintBadge(address to, uint256 badgeId) external {
+    require(msg.sender == reviewerContract, "Not authorized");
+    require(badgeId >= 1 && badgeId <= MAX_BADGES, "Invalid badge");
+    require(!hasBadge[to][badgeId], "Badge already owned");
 
-        // Dacă are deja 4 badge-uri → NU mai mintăm, doar ieșim
-        if (_ownedBadges[to].length >= MAX_BADGES) {
-            return;
-        }
+    /*
+        Aici generam un tokenId unic -> combinam adresa userului & nivelul badge-ului si le hash-uim
+        ============
+        De ce? 
+        ============
+        Pentru ca ERC-721 NU permite două NFT-uri cu același tokenId
+        Iar mai mulți useri pot avea „Badge 1” , dar tokenId-urile trebuie să fie diferite
 
-        uint256 tokenId = nextTokenId;
-        _safeMint(to, tokenId);
-        _ownedBadges[to].push(tokenId);
-        nextTokenId++;
-    }
+    */
+    uint256 tokenId = uint256(
+    keccak256(abi.encodePacked(to, badgeId))
+    );
+
+    // se creeaza NFT-ul
+    _safeMint(to, tokenId);
+    // pastrare evidenta
+    hasBadge[to][badgeId] = true;
+    _ownedBadges[to].push(badgeId);
+}
+
 
 
 

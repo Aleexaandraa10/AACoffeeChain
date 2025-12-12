@@ -9,7 +9,7 @@ interface ICoffeeToken {
 }
 
 interface ICoffeeBadge {
-    function mintBadge(address to) external;
+    function mintBadge(address to, uint256 badgeId) external;
 }
 
 contract CoffeeReviews {
@@ -84,11 +84,18 @@ contract CoffeeReviews {
 
 
         // Dacă utilizatorul atinge pragul → primește badge
-        if (reviewCount[msg.sender].checkRewardEligibility()) {
-            coffeeBadge.mintBadge(msg.sender);
-            reviewCount[msg.sender] = 0;
+        uint256 badgeLevel = reviewCount[msg.sender] / BADGE_THRESHOLD;
+
+        if (
+            reviewCount[msg.sender] % BADGE_THRESHOLD == 0 && // exact la 5,10,15,20
+            badgeLevel >= 1 &&
+            badgeLevel <= 4
+        ) {
+            coffeeBadge.mintBadge(msg.sender, badgeLevel);
             emit BadgeAwarded(msg.sender, block.timestamp);
         }
+
+
 }
 
 
