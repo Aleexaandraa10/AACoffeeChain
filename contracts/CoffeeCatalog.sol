@@ -25,6 +25,7 @@ contract CoffeeCatalog is Ownable {
 
     event CoffeeAdded(bytes32 indexed code, string name, uint256 priceWei, string imageCID);
     event CoffeePurchased(address indexed buyer, bytes32 indexed code, uint256 priceWei);
+    event CoffeeDeleted(bytes32 indexed code);
 
     // in OpenZeppelin, Ownable are un constructor care cere explicit adresa ownerului
     constructor(address initialOwner)
@@ -79,16 +80,34 @@ contract CoffeeCatalog is Ownable {
     }
 
 
+    function deleteCoffee(bytes32 code) external onlyOwner {
+        require(coffees[code].exists, "Coffee does not exist");
+
+        delete coffees[code];
+
+        // scoatem codul din array
+        for (uint i = 0; i < coffeeCodes.length; i++) {
+            if (coffeeCodes[i] == code) {
+                coffeeCodes[i] = coffeeCodes[coffeeCodes.length - 1];
+                coffeeCodes.pop();
+                break;
+            }
+        }
+        emit CoffeeDeleted(code);
+    }
+
+
+
     // view = fct poate citi date din blockchain, dar nu are voie sa modifice
     function getCoffee(bytes32 code)
         external
         view
-        returns (string memory, uint256, string memory)
-    { // citeste din mapping
-        Coffee memory c = coffees[code];
-        require(c.exists, "Coffee not found");
-        return (c.name, c.priceWei, c.imageCID);
-    }
+        returns (string memory, uint256, string memory){ // citeste din mapping
+            Coffee memory c = coffees[code];
+            require(c.exists, "Coffee not found");
+            return (c.name, c.priceWei, c.imageCID);
+        }
+
 
     function updateRating(bytes32 code, uint8 newRating) external {
         uint256 oldAvg = averageRating[code];
@@ -105,15 +124,12 @@ contract CoffeeCatalog is Ownable {
     function getAllCoffees()
         external
         view
-        returns (bytes32[] memory, Coffee[] memory)
-    {
-        Coffee[] memory list = new Coffee[](coffeeCodes.length);
-
-        for (uint256 i = 0; i < coffeeCodes.length; i++) {
-            list[i] = coffees[coffeeCodes[i]];
+        returns (bytes32[] memory, Coffee[] memory){
+            Coffee[] memory list = new Coffee[](coffeeCodes.length);
+            for (uint256 i = 0; i < coffeeCodes.length; i++) {
+                list[i] = coffees[coffeeCodes[i]];
+            }
+            return (coffeeCodes, list);
         }
-
-        return (coffeeCodes, list);
-    }
 
 }

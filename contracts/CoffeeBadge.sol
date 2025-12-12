@@ -9,6 +9,9 @@ contract CoffeeBadge is ERC721, Ownable {
     // reward = 1 COF token = 1 * 10^18 unitati interne
     uint256 public nextTokenId = 1;
 
+    uint256 public constant MAX_BADGES = 4;
+
+
     // adresa contractului CoffeeReviews care are voie să mintuiască
     address public reviewerContract;
 
@@ -34,6 +37,8 @@ contract CoffeeBadge is ERC721, Ownable {
         reviewerContract = _reviews;
     }
 
+
+
     /**
         Mintuieste un badge pentru un utilizator fidel.
         Poate fi apelat DOAR de contractul CoffeeReviews.
@@ -41,15 +46,18 @@ contract CoffeeBadge is ERC721, Ownable {
     function mintBadge(address to) external {
         require(msg.sender == reviewerContract, "Not authorized to mint");
 
+        // Dacă are deja 4 badge-uri → NU mai mintăm, doar ieșim
+        if (_ownedBadges[to].length >= MAX_BADGES) {
+            return;
+        }
+
         uint256 tokenId = nextTokenId;
-
         _safeMint(to, tokenId);
-
-        // salvăm tokenId în lista userului
         _ownedBadges[to].push(tokenId);
-
         nextTokenId++;
     }
+
+
 
     /**
         pe langa tokenId unic al NFT, mai au si:
@@ -57,10 +65,23 @@ contract CoffeeBadge is ERC721, Ownable {
             - URI = baseURI + tokenId
      */
     function _baseURI() internal pure override returns (string memory) {
-        return "ipfs://QmCoffeeBadgeMetadataCID/";
+        return "ipfs://bafybeibwlszj5dejolcjlj6qdnhdovsla3uonb5eo2vghg4bpo7xni5k6i/";
     }
 
-    // funcție pe care o va apela frontend-ul tău
+    function tokenURI(uint256 tokenId) public view override
+        returns (string memory){
+            return string(
+                abi.encodePacked(
+                    _baseURI(),
+                    Strings.toString(tokenId),
+                    ".json"
+                )
+            );
+        }
+
+
+
+    // funcție pe care o va apela frontend-ul 
     function getBadgesOf(address user)
         external
         view

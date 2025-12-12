@@ -111,6 +111,28 @@ async function main() {
   await (coffeeCatalog as any).addCoffee("Cappuccino", priceCapp,   "bafkreidjts2jwnnhwn4gnjs6ryvwxf6xq6ivbcrnpasmcdydzxpowfbrny");
 
   console.log("☕ Coffees added!");
+
+  // =====================================================
+  // === 10. AUTO-GENERATE REVIEWS =====================
+  // =====================================================
+  console.log("✏️ Adding auto-reviews...");
+
+  // luam primul coffeeCode
+  const allCoffees = await (coffeeCatalog as any).getAllCoffees();
+  const coffeeCode = allCoffees[0][0]; // primul coffee code (bytes32)
+
+  for (let i = 1; i <= 24; i++) {
+    const tx = await (coffeeReviews as any).postReview(
+      coffeeCode,
+      5,
+      `Bootstrap review #${i}`
+    );
+    await tx.wait();
+    console.log(`   ✔ Review ${i} posted`);
+  }
+
+  console.log("\n🎉 reviews added successfully!\n");
+  // =====================================================
 }
 main().catch((err) => {
   console.error(err);

@@ -1,31 +1,24 @@
-// ===============================================
-// CoffeeService — Blockchain API Helper Layer
-// ===============================================
-
 import {
   createPublicClient,
   createWalletClient,
   custom,
   http,
-  //padHex,
   type Address,
   formatEther,
 } from "viem";
 
 import { hardhat } from "viem/chains";
 
-// ABIs
 import coffeeTokenAbi from "../abi/CoffeeToken.json";
 import coffeeCatalogAbi from "../abi/CoffeeCatalog.json";
 import coffeeReviewsAbi from "../abi/CoffeeReviews.json";
 import coffeeBadgeAbi from "../abi/CoffeeBadge.json";
 
-// Addresses JSON
 import addresses from "../contract-addresses.json";
 
-// ===============================================
-// Types
-// ===============================================
+// ============================================================================
+//                                   Types
+// ============================================================================
 
 export interface UICoffee {
   code: string;
@@ -41,22 +34,21 @@ export interface Review {
   coffeeCode: string;
 }
 
-// ===============================================
-// Contract addresses
-// ===============================================
+// =============================================================================
+//                               Contract addresses
+// ==============================================================================
 
 export const CoffeeTokenAddress = addresses.CoffeeToken as Address;
 export const CoffeeCatalogAddress = addresses.CoffeeCatalog as Address;
 export const CoffeeReviewsAddress = addresses.CoffeeReviews as Address;
 export const CoffeeBadgeAddress = addresses.CoffeeBadge as Address;
 
-// BADGE threshold from contract
-export const BADGE_THRESHOLD = 5;
+export const BADGE_THRESHOLD = 5; // BADGE threshold from contract
 
-// ===============================================
-// Blockchain Clients
-// ===============================================
 
+// ===========================================================================
+//                                Blockchain Clients
+// =============================================================================
 export const publicClient = createPublicClient({
   chain: hardhat,
   transport: http(),
@@ -76,12 +68,10 @@ export const getWalletClient = async () => {
   });
 };
 
-// ===============================================
-// Utils
-// ===============================================
 
-// export const toBytes32 = (hexString: string) =>
-//   padHex(hexString as `0x${string}`, { size: 32 });
+// ==============================================================================
+//                                Utils
+// ==============================================================================
 export const toBytes32 = (code: string) =>
   code as `0x${string}`;
 
@@ -90,10 +80,20 @@ export const shortenAddress = (addr: string) =>
 
 export const formatETH = (wei: bigint) => Number(formatEther(wei)).toFixed(4);
 
-// ===============================================
-// 1️⃣ Coffees
-// ===============================================
 
+// Convert IPFS → HTTP (Pinata Gateway)
+export const ipfsToHttp = (uri: string) => {
+  if (!uri) return "";
+  return uri.replace(
+    "ipfs://",
+    "https://aquamarine-magnificent-squid-227.mypinata.cloud/ipfs/"
+  );
+};
+
+
+// =================================================================================
+//                                  1. Coffees
+// =================================================================================
 export const getCoffees = async (): Promise<UICoffee[]> => {
   const [codes, list] = (await publicClient.readContract({
     address: CoffeeCatalogAddress,
@@ -125,6 +125,18 @@ export const buyCoffee = async (coffee: UICoffee) => {
   });
 };
 
+export async function deleteCoffee(code: string) {
+  const wallet = await getWalletClient();
+
+  return wallet.writeContract({
+    address: CoffeeCatalogAddress,
+    abi: coffeeCatalogAbi.abi,
+    functionName: "deleteCoffee",
+    args: [code],
+  });
+}
+
+
 // ======================================
 // Estimate gas + cost for buying a coffee
 // ======================================
@@ -154,10 +166,9 @@ export async function estimateBuyCoffeeGas(coffee: UICoffee) {
 }
 
 
-// ===============================================
-// 2️⃣ Reviews
-// ===============================================
-
+// ===================================================================================
+//                                    2. Reviews
+// ===================================================================================
 export async function estimateReviewGas(code: string, score: number, text: string) {
   const codeBytes = code as `0x${string}`;
 
@@ -237,10 +248,10 @@ export const getReviewsForCoffee = async (
 // alias simplu pentru frontend
 export const getReviews = getReviewsForCoffee;
 
-// ===============================================
-// 3️⃣ User Stats (ETH, Token, Reviews)
-// ===============================================
 
+// =============================================================================
+//                  3. User Stats (ETH, Token, Reviews)
+// =============================================================================
 export const getTokenBalance = async (user: string): Promise<number> => {
   const raw = (await publicClient.readContract({
     address: CoffeeTokenAddress,
@@ -270,11 +281,10 @@ export const getUserReviewCount = async (
   return Number(raw);
 };
 
-// ===============================================
-// 4️⃣ NFT Badges (no ERC721Enumerable)
-// ===============================================
 
-
+// ===========================================================================
+//                    4. NFT Badges 
+// ===========================================================================
 export const getBadges = async (user: string): Promise<bigint[]> => {
   try {
     const ids = (await publicClient.readContract({

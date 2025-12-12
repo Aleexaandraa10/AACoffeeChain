@@ -25,9 +25,12 @@ import {
   shortenAddress,
   type UICoffee,
   type Review,
+  ipfsToHttp,
+  deleteCoffee
 } from "./services/CoffeeService";
 
 import { formatEther } from "viem";
+
 
 // ⭐⭐⭐ STARS COMPONENT ⭐⭐⭐
 const Stars = ({ score }: { score: number }) => {
@@ -35,13 +38,25 @@ const Stars = ({ score }: { score: number }) => {
 };
 
 // ---------------- Badge metadata type ----------------
-interface BadgeMeta {
+interface BadgeMeta { //ne spune cum arata un Badge in UI
   id: number;
   tokenId: bigint;
   uri: string;
+  image: string; 
 }
 
+
+// useState = memorie React
 function App() {
+
+  // ====================================================================================
+  //                                      COMPONENT STATE 
+  // =======================================================================================
+
+  /*
+   const [valoare, setter] = useState(initialValue);
+   valoare = ce citesc, setter = ce modific
+  */
   const [account, setAccount] = useState<string>("");
   const [ethBalance, setEthBalance] = useState<number>(0);
   const [cftBalance, setCftBalance] = useState<number>(0);
@@ -80,6 +95,10 @@ function App() {
     setTimeout(() => setToast(null), 3000);
   };
 
+
+  // =============================================================================
+  //                      UTILS/HELPERS
+  // =============================================================================
   const getReadableError = (err: any): string => {
     const msg = err?.message || "";
     if (msg.includes("User rejected")) return "You cancelled the MetaMask transaction.";
@@ -88,9 +107,32 @@ function App() {
     return "Unexpected error.";
   };
 
-  // ===================================================
-  // INITIAL LOAD
-  // ===================================================
+  const getCoffeeNameByCode = (code?: string) => {
+    const c = coffees.find((x) => x.code === code);
+    return c ? c.name : "Unknown coffee";
+  };
+
+
+  // ============================================================================
+  //                        DATA LOADERS
+  // =============================================================================
+  const loadReviewsForCoffee = async (code: string | null | undefined) => {
+    if (!code?.startsWith("0x")) return;
+
+    try {
+      setReviewLoading(true);
+      const revs = await getReviews(code);
+      setReviewsMap((prev) => ({ ...prev, [code]: revs }));
+      setSelectedCoffee(code);
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+
+  // ==================================================================================
+  //              INITIAL LOAD - ruleaza o sg data, la pornirea aplicatiei
+  // ==================================================================================
   useEffect(() => {
     (async () => {
       try {
@@ -113,29 +155,50 @@ function App() {
         // Load badges metadata
         const badgeIds = await getBadges(addr);
         const metadata: BadgeMeta[] = await Promise.all(
-          badgeIds.map(async (tokenId, idx) => ({
+        badgeIds.map(async (tokenId, idx) => {
+          const uri = await getBadgeURI(tokenId); // EX: "ipfs://CID/1.json"
+          const httpUri = ipfsToHttp(uri); // transformăm în HTTP
+
+          // Fetch metadata JSON din IPFS
+          let meta: any = {};
+
+          try {
+            const response = await fetch(httpUri);
+            meta = await response.json();
+          } catch (e) {
+            console.error("Metadata fetch error for badge:", tokenId, httpUri, e);
+            meta = { image: "" }; // fallback ca să nu crape UI-ul
+          }
+
+          // construim obiectul pe care il vom folosi in React
+          return {
             id: idx,
             tokenId,
-            uri: await getBadgeURI(tokenId),
-          }))
-        );
-        setBadges(metadata);
+            uri: httpUri,
+            image: meta.image.startsWith("ipfs://")
+                ? ipfsToHttp(meta.image)
+                : meta.image,  
+          };
+        })
+      );
 
+        setBadges(metadata);
         if (coffeeList.length > 0) {
-          await loadReviewsForCoffee(coffeeList[0].code);
+        await loadReviewsForCoffee(coffeeList[0].code);}
+      } 
+        catch (err) {
+          console.error(err);
+          alert("Init failed — see console.");
+        } finally {
+          setLoading(false);
         }
-      } catch (err) {
-        console.error(err);
-        alert("Init failed — see console.");
-      } finally {
-        setLoading(false);
-      }
     })();
   }, []);
 
-  // =====================================================
-  // WATCH EVENTS
-  // =====================================================
+
+  // ==================================================================================
+  //            WATCH EVENTS - asculta ev. de pe blockchain in timp real
+  // ==================================================================================
   useEffect(() => {
     if (!account) return;
 
@@ -154,6 +217,15 @@ function App() {
       },
     });
 
+    const unwatchAddCoffee = publicClient.watchContractEvent({
+      address: CoffeeCatalogAddress,
+      abi: coffeeCatalogAbi.abi,
+      eventName: "CoffeeAdded",
+      onLogs() {
+        getCoffees().then(setCoffees).catch(console.error);
+      },
+    });
+
     const unwatchReview = publicClient.watchContractEvent({
       address: CoffeeReviewsAddress,
       abi: coffeeReviewsAbi.abi,
@@ -166,11 +238,18 @@ function App() {
         getBadges(account)
           .then(async (ids) => {
             const meta = await Promise.all(
-              ids.map(async (tokenId, idx) => ({
-                id: idx,
-                tokenId,
-                uri: await getBadgeURI(tokenId),
-              }))
+              ids.map(async (tokenId, idx) => {
+                const uri = await getBadgeURI(tokenId);
+                const httpUri = ipfsToHttp(uri);
+                const metadata = await fetch(httpUri).then(r => r.json());
+
+                return {
+                  id: idx,
+                  tokenId,
+                  uri: httpUri,
+                  image: ipfsToHttp(metadata.image),
+                };
+              })
             );
             setBadges(meta);
           })
@@ -178,36 +257,29 @@ function App() {
       },
     });
 
+    const unwatchDelete = publicClient.watchContractEvent({
+      address: CoffeeCatalogAddress,
+      abi: coffeeCatalogAbi.abi,
+      eventName: "CoffeeDeleted",
+      onLogs() {
+        getCoffees().then(setCoffees);
+      },
+    });
+
+
     return () => {
       unwatchPurchase?.();
       unwatchReview?.();
+      unwatchAddCoffee?.();
+      unwatchDelete?.();
     };
   }, [account, selectedCoffee]);
 
-  // ===================================================
-  // LOAD REVIEWS
-  // ===================================================
-  const loadReviewsForCoffee = async (code: string | null | undefined) => {
-    if (!code?.startsWith("0x")) return;
 
-    try {
-      setReviewLoading(true);
-      const revs = await getReviews(code);
-      setReviewsMap((prev) => ({ ...prev, [code]: revs }));
-      setSelectedCoffee(code);
-    } finally {
-      setReviewLoading(false);
-    }
-  };
 
-  const getCoffeeNameByCode = (code?: string) => {
-    const c = coffees.find((x) => x.code === code);
-    return c ? c.name : "Unknown coffee";
-  };
-
-  // ===================================================
-  // BUY COFFEE
-  // ===================================================
+  // =================================================================================
+  //                    HANDLERS (user actions)
+  // =================================================================================
   const handleBuy = async (coffee: UICoffee) => {
     try {
       setTxLoading(true);
@@ -220,7 +292,8 @@ function App() {
       });
 
       setPendingCoffee(coffee);
-      setShowEstimateModal(true);
+      setShowEstimateModal(true); // aici userul apasa Confirm si se face legatura cu confirmTransaction
+
     } catch (err: any) {
       showToast("error", getReadableError(err));
     } finally {
@@ -264,17 +337,33 @@ function App() {
           getBadges(account),
         ]);
 
-        setCftBalance(cft);
-        setReviewCount(cnt);
-
         const metadata: BadgeMeta[] = await Promise.all(
-          badgeIds.map(async (tokenId, idx) => ({
-            id: idx,
-            tokenId,
-            uri: await getBadgeURI(tokenId),
-          }))
+          badgeIds.map(async (tokenId, idx) => {
+            const uri = await getBadgeURI(tokenId);
+            const httpUri = ipfsToHttp(uri);
+
+            // Fetch metadata JSON from IPFS
+            let metadata: any = {};
+
+            try {
+              const response = await fetch(httpUri);
+              metadata = await response.json();
+            } catch (e) {
+              console.error("Live metadata fetch error:", tokenId, httpUri, e);
+              metadata = { image: "" };
+            }
+
+            return {
+              id: idx,
+              tokenId,
+              uri: httpUri,
+               image: ipfsToHttp(metadata.image || ""),
+            };
+          })
         );
+
         setBadges(metadata);
+
 
         showToast("success", "Review submitted!");
       }
@@ -288,9 +377,7 @@ function App() {
     }
   };
 
-  // ===================================================
-  // SUBMIT REVIEW
-  // ===================================================
+
   const handleSubmitReview = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -321,14 +408,125 @@ function App() {
 
       setShowEstimateModal(true);
       setReviewLoading(false);
-    } catch (err: any) {
-      showToast("error", getReadableError(err));
     }
+      catch (err: any) {
+        showToast("error", getReadableError(err));
+      }
+};
+
+
+// =====================================================================================
+//          SUBCOMPONENTS - ADD COFFEE (frontend → Metamask → contract)
+// =====================================================================================
+const AddCoffee = ({ account }: { account: string }) => {
+    // gestioneaza propriul state
+    // App mare nu stie astea
+    const [adding, setAdding] = useState(false);
+    const [name, setName] = useState("");
+    const [price, setPrice] = useState("");
+    const [file, setFile] = useState<File | null>(null);
+
+    const handleAdd = async () => {
+      if (adding) return; // prevenim dublu click
+      setAdding(true);
+
+      try {
+        if (!file) throw new Error("Choose an image");
+        if (!name.trim()) throw new Error("Enter a name");
+        if (!price.trim()) throw new Error("Enter a price");
+
+        // 1. Upload imagine
+        const form = new FormData();
+        form.append("file", file);
+
+        const uploadRes = await fetch("http://localhost:3001/upload", {
+          method: "POST",
+          headers: { "x-wallet": account },
+          body: form,
+        }).then(r => r.json());
+
+        if (!uploadRes.cid) {
+          throw new Error("Image upload failed");
+        }
+
+        const cid = uploadRes.cid;
+
+        // 2. Contract call — O SINGURĂ DATĂ
+        const wallet = await getWalletClient();
+
+        const hash = await wallet.writeContract({
+          address: CoffeeCatalogAddress,
+          abi: coffeeCatalogAbi.abi,
+          functionName: "addCoffee",
+          args: [
+            name,
+            BigInt(Math.floor(Number(price) * 1e18)),
+            cid,
+          ],
+        });
+
+        await publicClient.waitForTransactionReceipt({ hash });
+
+        alert("Coffee added! TX Hash: " + hash);
+
+        // reset form (opțional, dar nice)
+        setName("");
+        setPrice("");
+        setFile(null);
+      } catch (err: any) {
+        console.error(err);
+        alert(err.message || "Something went wrong");
+      } finally {
+        setAdding(false); // deblocăm
+      }
+    };
+
+    return (
+      <div className="add-coffee-card">
+        <h2 className="add-coffee-title">Add New Coffee ☕</h2>
+
+        <input
+          className="add-coffee-input"
+          placeholder="Coffee name..."
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+
+        <input
+          className="add-coffee-input"
+          placeholder="Price in ETH..."
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+        />
+
+        <label className="file-upload">
+          <input
+            type="file"
+            hidden
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+          />
+
+          <span className="file-btn">Choose image</span>
+          <span className="file-name">
+            {file ? file.name : "No file chosen"}
+          </span>
+        </label>
+
+        <button
+          className="add-coffee-btn"
+          onClick={handleAdd}
+          disabled={adding}
+        >
+          {adding ? "Adding..." : "Add Coffee"}
+        </button>
+      </div>
+    );
   };
 
-  // ===================================================
-  // UI RENDER
-  // ===================================================
+
+  // ===============================================================================
+  //                                  UI RENDER
+  // ===============================================================================
   return (
     <div className="app-container">
       <div className="content">
@@ -369,6 +567,14 @@ function App() {
           </div>
         </section>
 
+        {/* ADD COFFEE BUTTON */}
+        {account.toLowerCase() === "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266" && (
+          <section className="add-coffee-section">
+          <AddCoffee account={account} />
+          </section>
+        )}
+
+         
         {/* BADGES */}
         <section className="badges-section">
           <h2>My Badges</h2>
@@ -379,9 +585,13 @@ function App() {
             <div className="badge-grid">
               {badges.map((b) => (
                 <div className="badge-card" key={b.id}>
-                  <div className="badge-icon">🎖</div>
-                  <div className="badge-id">Token #{b.tokenId.toString()}</div>
-                  <div className="badge-uri">{b.uri}</div>
+                  <img 
+                    src={b.image}
+                    alt={`Badge ${b.tokenId.toString()}`}
+                    className="badge-image"
+                  />
+
+                  <div className="badge-id">Badge #{b.tokenId.toString()}</div>
                 </div>
               ))}
             </div>
@@ -403,7 +613,7 @@ function App() {
                   <div className="coffee-top">
                     <div className="coffee-left">
                       <img
-                        src={`https://olive-high-zebra-695.mypinata.cloud/ipfs/${c.imageCID}`}
+                        src={`https://aquamarine-magnificent-squid-227.mypinata.cloud/ipfs/${c.imageCID}`}
                         alt={c.name}
                         className="coffee-image"
                       />
@@ -416,6 +626,7 @@ function App() {
                       </div>
                     </div>
 
+                  <div className="coffee-actions">
                     <button
                       onClick={() => handleBuy(c)}
                       className="btn-buy"
@@ -423,7 +634,22 @@ function App() {
                     >
                       {txLoading ? "Processing..." : "Buy"}
                     </button>
+
+                    {account.toLowerCase() === "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266" && (
+                      <button
+                        className="btn-delete"
+                        onClick={async () => {
+                          if (!confirm("Delete this coffee?")) return;
+                          const hash = await deleteCoffee(c.code);
+                          await publicClient.waitForTransactionReceipt({ hash });
+                        }}
+                      >
+                        Delete
+                      </button>
+                    )}
                   </div>
+
+                </div>
 
                   <button
                     onClick={() => loadReviewsForCoffee(c.code)}
