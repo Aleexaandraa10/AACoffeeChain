@@ -36,7 +36,7 @@ The system is composed of multiple smart contracts, each with a well-defined res
 * **CoffeeBadge (ERC-721)**
   NFT-based loyalty system for active users.
 
-* **CoffeeLibrary**
+* **Library**
   Utility library for coffee code generation and rating calculations.
 
 All contracts are thoroughly tested using Hardhat and viem.
