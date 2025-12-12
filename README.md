@@ -1,57 +1,98 @@
-# Sample Hardhat 3 Beta Project (`node:test` and `viem`)
+# ☕ AACoffeeChain – Web3 Coffee Marketplace
 
-This project showcases a Hardhat 3 Beta project using the native Node.js test runner (`node:test`) and the `viem` library for Ethereum interactions.
+AACoffeeChain is a decentralized Web3 application that simulates a coffee marketplace built on Ethereum.
+Users can buy coffee products using ETH, post on-chain reviews, earn ERC-20 reward tokens, and receive ERC-721 NFT loyalty badges.
 
-To learn more about the Hardhat 3 Beta, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3 Beta](https://hardhat.org/hardhat3-beta-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+The project showcases a complete Web3 flow, from smart contract development and testing to frontend integration, highlighting core blockchain concepts such as ETH transfers, contract interaction, events, access control, and token standards.
 
-## Project Overview
 
-This example project includes:
+## ✨ Main Features
 
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using [`node:test`](nodejs.org/api/test.html), the new Node.js native test runner, and [`viem`](https://viem.sh/).
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
+* Connect wallet using **MetaMask**
+* Display connected wallet address and ETH balance
+* View available coffee products stored on-chain
+* Buy coffee using ETH (on-chain transaction)
+* Post on-chain reviews (rating + text)
+* Automatically receive **CoffeeToken (ERC-20)** for each review
+* Earn **CoffeeBadge (ERC-721 NFT)** loyalty badges after a number of reviews
+* Full smart contract event handling
+* Gas estimation and transaction error handling in the frontend
+* Separation between backend (smart contracts) and frontend logic
 
-## Usage
 
-### Running Tests
+## 🧱 Smart Contract Architecture
 
-To run all the tests in the project, execute the following command:
+The system is composed of multiple smart contracts, each with a well-defined responsibility:
 
-```shell
+* **CoffeeCatalog**
+  Manages coffee products, prices, ETH payments, and product availability.
+
+* **CoffeeReviews**
+  Handles review creation, reward logic, and badge eligibility.
+
+* **CoffeeToken (ERC-20)**
+  Reward token granted to users for posting reviews.
+
+* **CoffeeBadge (ERC-721)**
+  NFT-based loyalty system for active users.
+
+* **CoffeeLibrary**
+  Utility library for coffee code generation and rating calculations.
+
+All contracts are thoroughly tested using Hardhat and viem.
+
+
+## 🧪 Testing
+
+The project includes a comprehensive test suite that covers:
+
+* Happy paths for all main functionalities
+* Access control (`onlyOwner`, authorized contracts)
+* Revert cases and edge conditions
+* ETH transfers and balance checks
+* ERC-20 rewards and ERC-721 minting logic
+* Product deletion and validation logic
+
+Tests are written using **Hardhat 3**, **viem**, and **node:test**.
+
+To run the tests:
+
+```bash
 npx hardhat test
 ```
 
-You can also selectively run the Solidity or `node:test` tests:
+## 🌿 Branching Workflow
 
-```shell
-npx hardhat test solidity
-npx hardhat test nodejs
-```
+This project follows a clean and simple Git branching strategy:
 
-### Make a deployment to Sepolia
+* **alexandra** – personal feature branch for Alexandra
+* **andra** – personal feature branch for Andra
+* **develop** – integration branch where features are merged and tested
+* **main** – stable, production-ready branch containing the final validated version
+* **bugs** – branch dedicated to bug fixes, hotfixes, and stability improvements
 
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
+This workflow ensures clarity, traceability, and stability of the final codebase.
 
-To run the deployment to a local chain:
 
-```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
-```
+## 🛠️ Technologies Used
 
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
+* **Solidity**
+* **Hardhat**
+* **viem**
+* **ethers.js**
+* **React / Next.js**
+* **MetaMask**
+* **IPFS**
+* **ERC-20 & ERC-721 standards**
 
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
 
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
+## 🎓 Educational Purpose
 
-```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
-```
+This project was developed as part of the **Blockchain course (FMI – University of Bucharest)** and is intended for educational purposes, demonstrating real-world Web3 application architecture and best practices.
 
-After setting the variable, you can run the deployment with the Sepolia network:
 
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
-```
+## 🚀 Future Improvements
+
+* Multi-network deployment (Sepolia / Mainnet)
+* Improved gas optimization
+* Extended loyalty system with multiple badge levels
