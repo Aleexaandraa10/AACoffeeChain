@@ -113,6 +113,10 @@ function App() {
     reviewCount % BADGE_THRESHOLD === 0 &&
     badgesUnlocked < MAX_BADGES;
 
+
+
+  
+
   // =============================================================================
   //                      UTILS/HELPERS
   // =============================================================================
@@ -168,7 +172,7 @@ function App() {
         setCftBalance(cft);
         setReviewCount(count);
         setCoffees(coffeeList);
-
+        
         // Load badges metadata
         const badgeIds = await getBadges(addr);
         const metadata: BadgeMeta[] = await Promise.all(
@@ -255,6 +259,7 @@ function App() {
 
         getUserReviewCount(account).then(setReviewCount);
         getTokenBalance(account).then(setCftBalance);
+        getCoffees().then(setCoffees);
 
         getBadges(account)
           .then(async (ids) => {
@@ -351,6 +356,9 @@ function App() {
         setReviewScore(5);
 
         await loadReviewsForCoffee(pendingReview.code);
+        const updatedCoffees = await getCoffees();
+        setCoffees(updatedCoffees);
+
 
         const [cft, cnt, badgeIds] = await Promise.all([
           getTokenBalance(account),
@@ -665,6 +673,18 @@ const AddCoffee = ({ account }: { account: string }) => {
                         <div className="coffee-price">
                           {Number(formatEther(c.priceWei)).toFixed(4)} ETH
                         </div>
+                        {c.ratingCount > 0 ? (
+                            <div className="coffee-rating">
+                              <Stars score={Math.floor(c.averageRating)} />
+                              <span className="rating-text">
+                                {c.averageRating.toFixed(1)} / 5 ({c.ratingCount} reviews)
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="coffee-rating muted">No ratings yet</div>
+                          )}
+
+
                       </div>
                     </div>
 

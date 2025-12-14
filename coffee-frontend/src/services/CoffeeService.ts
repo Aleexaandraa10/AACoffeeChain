@@ -25,7 +25,11 @@ export interface UICoffee {
   name: string;
   priceWei: bigint;
   imageCID: string;
+
+  averageRating: number;
+  ratingCount: number;
 }
+
 
 export interface Review {
   reviewer: string;
@@ -104,12 +108,26 @@ export const getCoffees = async (): Promise<UICoffee[]> => {
     { name: string; priceWei: bigint; imageCID: string; exists: boolean }[]
   ];
 
-  return list.map((c, i) => ({
-    code: codes[i],
-    name: c.name,
-    priceWei: c.priceWei,
-    imageCID: c.imageCID,
-  }));
+  return Promise.all(
+  list.map(async (c, i) => {
+    const code = codes[i];
+
+    const [avg, count] = await Promise.all([
+      getAverageRating(code),
+      getRatingCount(code),
+    ]);
+
+    return {
+      code,
+      name: c.name,
+      priceWei: c.priceWei,
+      imageCID: c.imageCID,
+      averageRating: avg,
+      ratingCount: count,
+    };
+  })
+);
+
 };
 
 export const buyCoffee = async (coffee: UICoffee) => {
@@ -247,6 +265,31 @@ export const getReviewsForCoffee = async (
 
 // alias simplu pentru frontend
 export const getReviews = getReviewsForCoffee;
+// =============================
+// Average Rating (read-only)
+// =============================
+export const getAverageRating = async (code: string): Promise<number> => {
+  const raw = (await publicClient.readContract({
+    address: CoffeeCatalogAddress,
+    abi: coffeeCatalogAbi.abi,
+    functionName: "averageRating",
+    args: [code as `0x${string}`],
+  })) as bigint;
+
+  return Number(raw);
+};
+
+export const getRatingCount = async (code: string): Promise<number> => {
+  const raw = (await publicClient.readContract({
+    address: CoffeeCatalogAddress,
+    abi: coffeeCatalogAbi.abi,
+    functionName: "ratingCount",
+    args: [code as `0x${string}`],
+  })) as bigint;
+
+  return Number(raw);
+};
+
 
 
 // =============================================================================

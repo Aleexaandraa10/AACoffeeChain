@@ -15,7 +15,7 @@ export interface CoffeeBadge$Type {
   readonly deployedLinkReferences: {};
   readonly immutableReferences: {};
   readonly inputSourceName: "project/contracts/CoffeeBadge.sol";
-  readonly buildInfoId: "solc-0_8_20-e36883ecf3ed8d796c7aad466f991ccfa349f79d";
+  readonly buildInfoId: "solc-0_8_20-84122003a3d18877ff6e8e7fa8b8c37df58b437e";
 };
 
 import "hardhat/types/artifacts";

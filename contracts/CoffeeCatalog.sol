@@ -27,6 +27,18 @@ contract CoffeeCatalog is Ownable {
     event CoffeePurchased(address indexed buyer, bytes32 indexed code, uint256 priceWei);
     event CoffeeDeleted(bytes32 indexed code);
 
+    address public reviewsContract;
+
+    modifier onlyReviews() {
+        require(msg.sender == reviewsContract, "Not authorized");
+        _;
+    }
+
+    function setReviewsContract(address _reviews) external onlyOwner {
+        reviewsContract = _reviews;
+    }
+
+
     // in OpenZeppelin, Ownable are un constructor care cere explicit adresa ownerului
     constructor(address initialOwner)
         Ownable(initialOwner)
@@ -109,7 +121,10 @@ contract CoffeeCatalog is Ownable {
         }
 
 
-    function updateRating(bytes32 code, uint8 newRating) external {
+   function updateRating(bytes32 code, uint8 newRating)
+        external
+        onlyReviews
+    {
         uint256 oldAvg = averageRating[code];
         uint256 oldCount = ratingCount[code];
 

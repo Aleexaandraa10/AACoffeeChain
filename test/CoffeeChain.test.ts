@@ -39,12 +39,15 @@ describe("CoffeeChain – Full Flow with Hardhat 3 + viem", function () {
 
     reviews = await viem.deployContract("CoffeeReviews", [
       token.address,
-      badge.address
+      badge.address,
+      catalog.address
     ]);
 
     // Link contracts
     await token.write.setReviewsContract([reviews.address], { account: owner.account });
     await badge.write.setReviewerContract([reviews.address], { account: owner.account });
+    await catalog.write.setReviewsContract([reviews.address], {account: owner.account});
+
 
     // Compute coffee code
     coffeeCode = keccak256(toBytes(COFFEE_NAME));
@@ -478,6 +481,16 @@ describe("CoffeeChain – Full Flow with Hardhat 3 + viem", function () {
     expect(codes.length).to.equal(list.length);
     expect(list[0].exists).to.equal(true);
   });
+
+
+  it("Average rating is updated after reviews", async () => {
+  const avg = await catalog.read.averageRating([coffeeCode]);
+  const count = await catalog.read.ratingCount([coffeeCode]);
+
+  expect(count).to.equal(5n);
+  expect(avg).to.equal(4n); 
+  // (5 + 4 + 4 + 4 + 4) / 5 = 21 / 5 = 4 (integer math)
+});
 
 
 });
