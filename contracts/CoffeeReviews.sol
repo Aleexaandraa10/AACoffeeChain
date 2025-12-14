@@ -12,6 +12,10 @@ interface ICoffeeBadge {
     function mintBadge(address to, uint256 badgeId) external;
 }
 
+interface ICoffeeCatalog {
+    function updateRating(bytes32 code, uint8 newRating) external;
+}
+
 contract CoffeeReviews {
     // toate var de tip uint256 pot folosi fct din CoffeeLibrary 
     //ca si cum ar fi metode ale tipului uint256
@@ -28,6 +32,7 @@ contract CoffeeReviews {
     // Dependențe = referinte catre contractele externe
     ICoffeeToken public coffeeToken; 
     ICoffeeBadge public coffeeBadge;
+    ICoffeeCatalog public coffeeCatalog;
 
 
     // Prag pentru a primi un NFT badge
@@ -50,15 +55,18 @@ contract CoffeeReviews {
     );
     event BadgeAwarded(address indexed user, uint256 timestamp);
 
+    
 
-
-    constructor(address _coffeeToken, address _coffeeBadge) {
+    constructor(address _coffeeToken, address _coffeeBadge, address _coffeeCatalog) {
         require(_coffeeToken != address(0), "Invalid token address");
         require(_coffeeBadge != address(0), "Invalid badge address");
+         require(_coffeeCatalog != address(0), "Invalid catalog address");
 
         coffeeToken = ICoffeeToken(_coffeeToken);
         coffeeBadge = ICoffeeBadge(_coffeeBadge);
+         coffeeCatalog = ICoffeeCatalog(_coffeeCatalog);
     }
+    
 
     /**
         Posteaza o recenzie, acorda token si eventual badge.
@@ -74,6 +82,8 @@ contract CoffeeReviews {
             timestamp: block.timestamp
         }));
         reviewCount[msg.sender]++;
+        coffeeCatalog.updateRating(coffeeCode, rating);
+
 
         // pt fiecare recenzie userul primeste 1 COF(moneda virtuala interna) token
         coffeeToken.rewardUser(msg.sender);

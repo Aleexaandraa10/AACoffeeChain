@@ -1,17 +1,22 @@
 {
   "_format": "hh3-artifact-1",
-  "contractName": "ICoffeeToken",
+  "contractName": "ICoffeeCatalog",
   "sourceName": "contracts/CoffeeReviews.sol",
   "abi": [
     {
       "inputs": [
         {
-          "internalType": "address",
-          "name": "user",
-          "type": "address"
+          "internalType": "bytes32",
+          "name": "code",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint8",
+          "name": "newRating",
+          "type": "uint8"
         }
       ],
-      "name": "rewardUser",
+      "name": "updateRating",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

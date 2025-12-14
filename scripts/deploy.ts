@@ -70,9 +70,11 @@ async function main() {
     deployer
   );
   const coffeeReviews = await CoffeeReviewsFactory.deploy(
-    coffeeTokenAddr,
-    coffeeBadgeAddr
+  coffeeTokenAddr,
+  coffeeBadgeAddr,
+  coffeeCatalogAddr
   );
+
   await coffeeReviews.waitForDeployment();
   const coffeeReviewsAddr = await coffeeReviews.getAddress();
   console.log("CoffeeReviews deployed at:", coffeeReviewsAddr, "\n");
@@ -81,6 +83,7 @@ async function main() {
   console.log("Setting token & badge links...");
   await (coffeeToken  as any).setReviewsContract(coffeeReviewsAddr);
   await (coffeeBadge  as any).setReviewerContract(coffeeReviewsAddr);
+  await (coffeeCatalog as any).setReviewsContract(coffeeReviewsAddr);
   console.log("Links set successfully.\n");
 
   // === 8. Salvare adrese pentru frontend in contract-addresses.json ===
